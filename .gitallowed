@@ -4,5 +4,6 @@
 #   - 実際のシークレット値を書いてはいけない
 #   - --no-verify は使わない
 
-# [2026-03-24] patterns.md のパターン解説表に検知パターン名そのものが含まれるため
+# [2026-03-24] patterns.md の解説表・hooks/pre-push のパターン定義に検知ワードが含まれるため
 | `PRIVATE KEY` |
+    'PRIVATE KEY'
