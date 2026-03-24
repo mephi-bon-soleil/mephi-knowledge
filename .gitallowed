@@ -4,6 +4,31 @@
 #   - 実際のシークレット値を書いてはいけない
 #   - --no-verify は使わない
 
-# [2026-03-24] patterns.md の解説表・hooks/pre-push のパターン定義に検知ワードが含まれるため
-| `PRIVATE KEY` |
+# [2026-03-24] このリポジトリはhookのパターン定義・解説を含むため
+# hooks/pre-push と allowlist/patterns.md の全パターン名を自己許可する
     'PRIVATE KEY'
+| `PRIVATE KEY` |
+    'aws_access_key_id'
+| `aws_access_key_id` |
+    'aws_secret_access_key'
+| `aws_secret_access_key` |
+    'ANTHROPIC_API_KEY'
+| `ANTHROPIC_API_KEY` |
+    'OPENAI_API_KEY'
+| `OPENAI_API_KEY` |
+    'API_KEY\s*='
+| `API_KEY\s*=` |
+    'SECRET_KEY\s*='
+| `SECRET_KEY\s*=` |
+    'password\s*='
+| `password\s*=` |
+    'token\s*='
+| `token\s*=` |
+    'Bearer
+| `Bearer ...` |
+    'sk-[A-Za-z0-9]
+| `sk-[A-Za-z0-9]{20,}` |
+    'ghp_[A-Za-z0-9]
+| `ghp_[A-Za-z0-9]{36}` |
+    'gho_[A-Za-z0-9]
+| `gho_[A-Za-z0-9]{36}` |
