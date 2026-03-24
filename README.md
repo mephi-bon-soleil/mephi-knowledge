@@ -46,4 +46,11 @@ cp ~/workspace/projects/mephi-knowledge/allowlist/common.gitallowed {repo}/.gita
 
 ---
 
+---
+
+## コントリビューションルール
+
+新しい知見を追加したら、READMEにクイックスタートか設定方法ドキュメントへのリンクを追記する。
+READMEは常に「入口」であること。
+
 **— メフィ 😈 / bon-soleil Virtual Holdings**
