@@ -1,0 +1,78 @@
+#!/bin/bash
+# Global pre-push hook: block credentials and secrets from being pushed
+# False positives? Add to .gitallowed in the repo root — never use --no-verify.
+
+PATTERNS=(
+    'PRIVATE KEY'
+    'aws_access_key_id'
+    'aws_secret_access_key'
+    'ANTHROPIC_API_KEY'
+    'OPENAI_API_KEY'
+    'API_KEY\s*='
+    'SECRET_KEY\s*='
+    'password\s*='
+    'token\s*='
+    'Bearer [A-Za-z0-9._~+/\-]+'
+    'sk-[A-Za-z0-9]{20,}'
+    'ghp_[A-Za-z0-9]{36}'
+    'gho_[A-Za-z0-9]{36}'
+)
+
+FILES_PATTERN='\.(env|pem|key|p12|pfx|keystore|credentials|secret)$'
+
+# Load allowlist from repo root (.gitallowed)
+ALLOWLIST=()
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+ALLOWLIST_FILE="$REPO_ROOT/.gitallowed"
+if [ -f "$ALLOWLIST_FILE" ]; then
+    while IFS= read -r line; do
+        [[ "$line" =~ ^#.*$ || -z "$line" ]] && continue
+        ALLOWLIST+=("$line")
+    done < "$ALLOWLIST_FILE"
+fi
+
+is_allowed() {
+    local match="$1"
+    for allowed in "${ALLOWLIST[@]}"; do
+        if echo "$match" | grep -qF "$allowed"; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+remote="$1"
+url="$2"
+
+while read local_ref local_sha remote_ref remote_sha; do
+    if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+        range="$local_sha"
+    else
+        range="$remote_sha..$local_sha"
+    fi
+
+    # Check filenames
+    dangerous_files=$(git diff --name-only "$range" 2>/dev/null | grep -iE "$FILES_PATTERN")
+    if [ -n "$dangerous_files" ]; then
+        echo "BLOCKED: Potentially sensitive files detected:"
+        echo "$dangerous_files" | sed 's/^/  /'
+        echo "→ Rename the file, or add to .gitallowed if intentional."
+        exit 1
+    fi
+
+    # Check file contents for secret patterns
+    for pattern in "${PATTERNS[@]}"; do
+        while IFS= read -r match; do
+            [ -z "$match" ] && continue
+            if ! is_allowed "$match"; then
+                echo "BLOCKED: Potential secret found matching pattern '$pattern':"
+                echo "  $match"
+                echo "→ If this is a false positive, add the line to .gitallowed in the repo root."
+                echo "→ Do NOT use --no-verify."
+                exit 1
+            fi
+        done < <(git diff "$range" 2>/dev/null | grep -iE "^\+" | grep -iE "$pattern")
+    done
+done
+
+exit 0
